@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+		<link rel="stylesheet" href="leftnav.css" media="screen" type="text/css"/>
+		<script type="text/javascript" src="jquery.min.js"></script>
+		<script type="text/javascript" src='leftnav.js'></script>
+			<link rel="stylesheet" href="video.css"/>
+			<script src="pingzi_video.js"></script>
+    <title>课程设计</title>
+    <style>
+
+      #viewDiv {
+        position: fixed;
+		  height: 100%;
+		  width: 100%;
+		  left: 0;
+        z-index: -1;
+      }
+
+      #overviewDiv {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        width: 300px;
+        height: 200px;
+        border: 1px solid black;
+        z-index: 1;
+        overflow: hidden;
+      }
+
+      #extentDiv {
+        background-color: rgba(0, 0, 0, 0.5);
+        position: absolute;
+        z-index: 2;
+      }
+			#change {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            z-index: 2;
+        }
+				#change img {
+                width: 100px;
+                height: 100px;
+                border: 1px solid rgb(230, 255, 255);
+                border-radius: 2px;
+            }
+
+                #change img:hover {
+                    border: 1px solid rgba(0, 148, 255,0.5);
+                }
+			#screenshotDiv {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
+      .hide {
+        display: none;
+      }
+
+      img {
+        border: 10px solid white;
+        box-shadow: 2px 2px 5px 0 rgba(0, 0, 0, 0.5);
+      }
+
+      #screenshotDiv > * {
+        margin: 0.5em;
+      }
+
+      .screenshotCursor {
+        cursor: crosshair;
+      }
+	 #screenshotBtn{
+		 position:relative;
+		 top: 100px;
+		 right:200px
+		 width:300px;
+	 }
+      .action-button {
+        padding: 0.6em;
+        border: 1px solid #0079c1;
+        text-align: center;
+        background-color: white;
+        cursor: pointer;
+      }
+
+      .action-button:hover,
+      .action-button:focus {
+        background: #0079c1;
+        color: white;
+      }
+
+      #maskDiv {
+        position: absolute;
+        background: rgba(255, 51, 0, 0.1);
+        border: 2px dashed rgb(255, 51, 0);
+      }
+				
+			
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.11/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.11/"></script>
+
+    <script>
+				var mainView;
+				var mapView;
+				var polyline;
+				var lineSymbol;
+				var polylineGraphic;
+				var a = 0;
+				var point,markerSymbol,pointGraphic;
+				// var pointGraphic = new Array();定义一个数组,添加用pointGraphic.push()
+				var csvLayer;
+				var pointGraphic1,pointGraphic2,pointGraphic3,pointGraphic4,pointGraphic5,pointGraphic6,pointGraphic7,pointGraphic8,pointGraphic9,pointGraphic10,pointGraphic11,pointGraphic12,pointGraphic13,pointGraphic14;
+				var b = [[108.40, 34.30], [103.40, 36.0], [98.17, 39.47], [92.13, 39.53],[89.19, 42.91],[87.17, 43.47], [81.32, 43.92], [71.26, 43.11], [69.18, 41.20], [43.35, 39.43], [31.54, 40.02], [28.58, 41.02], [23.44, 38.02], [12, 42]];
+				var basemaps = [
+				"satellite","topo"
+				];
+				
+			//切换底图显示
+        function changeLayer(type) {
+            if (type === 'satellite') {
+              mainView.map.basemap = basemaps[0];
+            } else if (type === 'oceans') {
+                mainView.map.basemap = basemaps[1];
+            }
+        }
+			
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/geometry/Point",
+        "esri/core/watchUtils",
+				 "esri/Graphic",
+				 "esri/layers/CSVLayer",
+				 "esri/renderers/HeatmapRenderer",
+				 "esri/layers/FeatureLayer"
+      ], function(Map, MapView, Point, watchUtils,Graphic,CSVLayer,HeatmapRenderer,FeatureLayer) {
+				
+				var url =
+          "https://gcx1114211899.github.io/hospital/silklinedata.csv";
+					
+					var url2 = "https://gcx1114211899.github.io/hospital/silklinestate.csv";
+										
+				var renderer = {
+          type: "heatmap",
+					field: "weight",
+					blurRadius: 20,
+          colorStops: [
+            { color: "rgba(63, 40, 102, 0)", ratio: 0 },
+            { color: "#472b77", ratio: 0.1 },
+            { color: "#4e2d87", ratio: 0.16 },
+            { color: "#563098", ratio: 0.24 },
+            { color: "#5d32a8", ratio: 0.35 },
+            { color: "#6735be", ratio: 0.48 },
+            { color: "#7139d4", ratio: 0.55 },
+            { color: "#7b3ce9", ratio: 0.60 },
+            { color: "#853fff", ratio: 0.68 },
+            { color: "#a46fbf", ratio: 0.77 },
+            { color: "#c29f80", ratio: 0.88 },
+            { color: "#e0cf40", ratio: 0.96 },
+            { color: "#ffff00", ratio: 1 }
+          ],
+          maxPixelIntensity: 50,
+          minPixelIntensity: 0
+        };
+				
+				
+
+        var template = {
+          title: "地点介绍",
+          content: "地点名称：{Name} <br/><br/> 简介：{state} "
+        };
+				
+				
+							
+				csvLayer2 = new CSVLayer({
+					url: url2,
+					copyright: "silk road",
+					popupTemplate: template
+				});
+				
+        csvLayer = new CSVLayer({
+          url: url,
+					renderer: renderer
+        });
+				
+				
+        var mainMap = new Map({
+          basemap: "satellite"
+        });
+
+        var overviewMap = new Map({
+          basemap: "streets"
+        });
+
+		mainView = new MapView({
+				id: 'mainView',
+        container: "viewDiv",
+        map: mainMap,
+				center: [103.40, 36.0],
+        zoom: 5
+		});
+
+         mapView = new MapView({
+          container: "overviewDiv",
+          map: overviewMap,
+          constraints: {
+            rotationEnabled: false
+          }
+        });
+				
+				// the button that triggers area selection mode
+        const screenshotBtn = document.getElementById("screenshotBtn");
+
+        // the orange mask used to select the area
+        const maskDiv = document.getElementById("maskDiv");
+
+        // element where we display the print preview
+        const screenshotDiv = document.getElementById("screenshotDiv");
+
+        // replace the navigation elements with screenshot area selection button
+        mainView.ui.empty("top-left");
+        mainView.ui.add(screenshotBtn, "top-left");
+
+        // add an event listener to trigger the area selection mode
+        screenshotBtn.addEventListener("click", function() {
+          screenshotBtn.classList.add("active");
+          mainView.container.classList.add("screenshotCursor");
+          let area = null;
+
+          // listen for drag events and compute the selected area
+          const dragHandler = mainView.on("drag", function(event) {
+            // prevent navigation in the view
+            event.stopPropagation();
+
+            // when the user starts dragging or is dragging
+            if (event.action !== "end") {
+              // calculate the extent of the area selected by dragging the cursor
+              const xmin = clamp(
+                Math.min(event.origin.x, event.x),
+                0,
+                mainView.width
+              );
+              const xmax = clamp(
+                Math.max(event.origin.x, event.x),
+                0,
+                mainView.width
+              );
+              const ymin = clamp(
+                Math.min(event.origin.y, event.y),
+                0,
+                mainView.height
+              );
+              const ymax = clamp(
+                Math.max(event.origin.y, event.y),
+                0,
+                mainView.height
+              );
+              area = {
+                x: xmin,
+                y: ymin,
+                width: xmax - xmin,
+                height: ymax - ymin
+              };
+              // set the position of the div element that marks the selected area
+              setMaskPosition(area);
+            }
+            else {
+              dragHandler.remove();
+              mainView
+                .takeScreenshot({ area: area, format: "png" })
+                .then(function(screenshot) {
+                  showPreview(screenshot);
+
+                  document.getElementById("downloadBtn").onclick = function() {
+                    const text = document.getElementById("textInput").value;
+                    if (text) {
+                      const dataUrl = getImageWithText(screenshot, text);
+                      downloadImage(
+                        "new" + ".png",
+                        dataUrl
+                      );
+                    }
+                    else {
+                      downloadImage(
+                        "new1" + ".png",
+                        screenshot.dataUrl
+                      );
+                    }
+                  };
+
+
+                  screenshotBtn.classList.remove("active");
+                  mainView.container.classList.remove("screenshotCursor");
+                  setMaskPosition(null);
+                });
+            }
+          });
+
+          function setMaskPosition(area) {
+            if (area) {
+              maskDiv.classList.remove("hide");
+              maskDiv.style.left = area.x + "px";
+              maskDiv.style.top = area.y + "px";
+              maskDiv.style.width = area.width + "px";
+              maskDiv.style.height = area.height + "px";
+            } else {
+              maskDiv.classList.add("hide");
+            }
+          }
+
+          function clamp(value, from, to) {
+            return value < from ? from : value > to ? to : value;
+          }
+        });
+
+        function showPreview(screenshot) {
+          screenshotDiv.classList.remove("hide");
+          const screenshotImage = document.getElementsByClassName(
+            "js-screenshot-image"
+          )[0];
+          screenshotImage.width = screenshot.data.width;
+          screenshotImage.height = screenshot.data.height;
+          screenshotImage.src = screenshot.dataUrl;
+        }
+
+        function getImageWithText(screenshot, text) {
+          const imageData = screenshot.data;
+
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          canvas.height = imageData.height;
+          canvas.width = imageData.width;
+
+          context.putImageData(imageData, 0, 0);
+          context.font = "20px Arial";
+          context.fillStyle = "#000";
+          context.fillRect(
+            0,
+            imageData.height - 40,
+            context.measureText(text).width + 20,
+            30
+          );
+
+          context.fillStyle = "#fff";
+          context.fillText(text, 10, imageData.height - 20);
+
+          return canvas.toDataURL();
+        }
+
+        function downloadImage(filename, dataUrl) {
+
+          if (!window.navigator.msSaveOrOpenBlob) {
+
+            const element = document.createElement("a");
+            element.setAttribute("href", dataUrl);
+            element.setAttribute("download", filename);
+            element.style.display = "none";
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          } else {
+            const byteString = atob(dataUrl.split(",")[1]);
+            const mimeString = dataUrl
+              .split(",")[0]
+              .split(":")[1]
+              .split(";")[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+              ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+
+            // download file
+            window.navigator.msSaveOrOpenBlob(blob, filename);
+          }
+        }
+        document
+          .getElementById("closeBtn")
+          .addEventListener("click", function() {
+            screenshotDiv.classList.add("hide");
+          });
+				
+				
+				
+				
+				polyline = {
+							type: "polyline", 
+							// 西安-兰州-嘉峪关-敦煌-吐鲁番-乌鲁木齐-伊利-阿斯塔纳-塔什干-索契-安卡拉-伊斯坦布尔-雅典-罗马
+							paths: [[108.40, 34.30], [103.40, 36.0], [98.17, 39.47], [92.13, 39.53],[89.19, 42.91],[87.17, 43.47], [81.32, 43.92], [71.26, 43.11], [69.18, 41.20], [43.35, 39.43], [31.54, 40.02], [28.58, 41.02], [23.44, 38.02], [12, 42]]
+						};
+						
+						lineSymbol = {
+							type: "simple-line", 
+							color: [226, 119, 40], 
+							width: 4
+						};												
+							polylineGraphic = new Graphic({
+								geometry: polyline, 
+								symbol: lineSymbol, 
+							});
+				
+
+					point = {type: "point", longitude: b[0][0],latitude: b[0][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic1 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[1][0],latitude: b[1][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic2 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[2][0],latitude: b[2][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic3 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[3][0],latitude: b[3][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic4 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[4][0],latitude: b[4][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic5 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[5][0],latitude: b[5][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic6 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[6][0],latitude: b[6][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic7 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[7][0],latitude: b[7][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic8 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[8][0],latitude: b[8][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic9 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[9][0],latitude: b[9][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic10 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[10][0],latitude: b[10][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic11 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[11][0],latitude: b[11][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic12 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[12][0],latitude: b[12][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic13 = new Graphic({geometry: point,symbol: markerSymbol}); 
+					point = {type: "point", longitude: b[13][0],latitude: b[13][1]};
+					markerSymbol = {type: "simple-marker", color: [226, 119, 40],outline: {color: [255, 255, 255],width: 2}};
+					pointGraphic14 = new Graphic({geometry: point,symbol: markerSymbol}); 
+
+						
+        mapView.ui.components = [];
+
+        var extentDiv = document.getElementById("extentDiv");
+
+        mapView.when(function() {
+          mainView.watch("extent", updateOverviewExtent);
+          mapView.watch("extent", updateOverviewExtent);
+          watchUtils.when(mainView, "stationary", updateOverview);
+
+          function updateOverview() {
+            mapView.goTo({
+              center: mainView.center,
+              scale:
+                mainView.scale *
+                2 *
+                Math.max(
+                  mainView.width / mapView.width,
+                  mainView.height / mapView.height
+                )
+            });
+          }
+
+          function updateOverviewExtent() {
+            var extent = mainView.extent;
+
+            var bottomLeft = mapView.toScreen(
+              new Point({
+                x: extent.xmin,
+                y: extent.ymin,
+                spatialReference: extent.spatialReference
+              })
+            );
+
+            var topRight = mapView.toScreen(
+              new Point({
+                x: extent.xmax,
+                y: extent.ymax,
+                spatialReference: extent.spatialReference
+              })
+            );
+
+            extentDiv.style.top = topRight.y + "px";
+            extentDiv.style.left = bottomLeft.x + "px";
+
+            extentDiv.style.height = bottomLeft.y - topRight.y + "px";
+            extentDiv.style.width = topRight.x - bottomLeft.x + "px";
+          }
+        });
+		
+		//坐标、比例尺函数
+	  var coordsWidget = document.getElementById("coordsWidget");
+	  mainView.ui.add(coordsWidget, "bottom-right");
+	  function showCoordinates(position) {
+		var coords = "Lat/Lon " + position.latitude.toFixed(3) + " " + position.longitude.toFixed(3) +
+			" | Scale 1:" + Math.round(mainView.scale * 1) / 1 +
+			" | Zoom " + mainView.zoom;
+		coordsWidget.innerHTML = coords;
+	  };
+	  mainView.watch(["stationary"], function() {
+		showCoordinates(mainView.center);
+	  });
+	  mainView.on(["pointer-move"], function(evt) {
+		showCoordinates(mainView.toMap({ x: evt.x, y: evt.y }));
+	  });
+		
+      });
+			
+			function addline(){
+							if(a == 0){
+								mainView.graphics.add(polylineGraphic);
+
+								mainView.graphics.add(pointGraphic1);
+								mainView.graphics.add(pointGraphic2);
+								mainView.graphics.add(pointGraphic3);
+								mainView.graphics.add(pointGraphic4);
+								mainView.graphics.add(pointGraphic5);
+								mainView.graphics.add(pointGraphic6);
+								mainView.graphics.add(pointGraphic7);
+								mainView.graphics.add(pointGraphic8);
+								mainView.graphics.add(pointGraphic9);
+								mainView.graphics.add(pointGraphic10);
+								mainView.graphics.add(pointGraphic11);
+								mainView.graphics.add(pointGraphic12);
+								mainView.graphics.add(pointGraphic13);
+								mainView.graphics.add(pointGraphic14);
+								// for(var t = 1;t<=14;t++){
+								// 	
+								// 	mainView.graphics.add(pointGraphic[t]);
+								// }
+								mapView.graphics.add(polylineGraphic);
+								alert("路线为西安→兰州→嘉峪关→敦煌→吐鲁番→乌鲁木齐→伊利→阿斯塔纳→塔什干→索契→安卡拉→伊斯坦布尔→雅典→罗马（再次点击'路线显示'即可取消显示）");
+								a = 1;
+							}else
+							{
+								mainView.graphics.remove(polylineGraphic);
+								mapView.graphics.remove(polylineGraphic);
+								mainView.graphics.remove(pointGraphic1);
+								mainView.graphics.remove(pointGraphic2);
+								mainView.graphics.remove(pointGraphic3);
+								mainView.graphics.remove(pointGraphic4);
+								mainView.graphics.remove(pointGraphic5);
+								mainView.graphics.remove(pointGraphic6);
+								mainView.graphics.remove(pointGraphic7);
+								mainView.graphics.remove(pointGraphic8);
+								mainView.graphics.remove(pointGraphic9);
+								mainView.graphics.remove(pointGraphic10);
+								mainView.graphics.remove(pointGraphic11);
+								mainView.graphics.remove(pointGraphic12);
+								mainView.graphics.remove(pointGraphic13);
+								mainView.graphics.remove(pointGraphic14);
+								a = 0;
+							}		
+						}
+		function heatpoint(){
+			if(a==0){
+				mainView.map.layers = [csvLayer];
+				a=1;
+			}else{
+				mainView.map.layers = "";
+				a=0;
+			}	
+		}
+			
+		function selectpoint(){
+			if(a==0){
+				mainView.map.layers = [csvLayer2];
+				a=1;
+			}else{
+				mainView.map.layers = "";
+				a=0;
+			}	
+		}	
+			
+			
+    </script>
+  </head>
+
+  <body>
+	<div id="coordsWidget" class="esri-widget esri-component"></div>
+    <div id="viewDiv">
+      <button
+        id="screenshotBtn"
+        class="action-button esri-widget"
+        aria-label="Select screenshot area"
+        title="Select screenshot area"
+      >
+        选择截取的区域
+      </button>
+    </div>
+    <div id="screenshotDiv" class="hide">
+      <img class="js-screenshot-image" />
+      <div>
+        <label>设置图片文本: </label
+        ><input type="text" placeholder="图片文本" id="textInput" autofocus />
+      </div>
+      <button
+        id="downloadBtn"
+        class="action-button"
+        aria-label="Download image"
+        title="Download image"
+      >
+        下载图片
+      </button>
+      <button
+        id="closeBtn"
+        class="action-button"
+        aria-label="Back to webscene"
+        title="Back to webscene"
+      >
+        返回地图
+      </button>
+    </div>
+    <div id="maskDiv" class="hide screenshotCursor"></div>
+    <div id="overviewDiv"><div id="extentDiv" style="padding:7px 15px 5px;"></div></div>
+		<div id="change" class="choice">
+        <img src="picture1.png" onclick="changeLayer('satellite')"/>
+        <img src="picture2.png" onclick="changeLayer('oceans')"/>
+    </div>
+		<!-- 下拉框 -->
+		<div class="newaccount">
+		    <a class="list-title">丝绸之路</a>
+		    <ul id="accordion" class="accordion">
+		        <li>
+		            <div class="link"><i class="fa fa-leaf"></i>故事简介<i class="fa fa-chevron-down"></i></div>
+		            <ul class="submenu">
+		                <li id="shop"><a class="m-video" data-src="jq22-sp.mp4">视频介绍</a></li>
+		                <li id="publicproducts"><a href="https://baike.baidu.com/item/%E4%B8%9D%E7%BB%B8%E4%B9%8B%E8%B7%AF/434?fr=aladdin" target="_blank">百科介绍</a></li>
+										<li id="line"><a onclick="addline()">路线显示</a></li>
+		            </ul>
+		        </li>
+		        <li>
+		            <div class="link"><i class="fa fa-shopping-cart"></i>途径影响<i class="fa fa-chevron-down"></i></div>
+		            <ul class="submenu">
+		                <li id="getneeds"><a onclick="heatpoint()">热力图展示</a></li>
+		            </ul>
+		        </li>
+		        <li>
+		            <div class="link"><i class="fa fa-pencil-square-o"></i>地点属性<i class="fa fa-chevron-down"></i></div>
+		            <ul class="submenu">
+		                <li id="buyerxunpanlist"><a onclick="selectpoint()">显示地点信息</a></li>
+		            </ul>
+		        </li>
+		        <li>
+		            <div class="link"><i class="fa fa-file-text"></i>3D模型<i class="fa fa-chevron-down"></i></div>
+		            <ul class="submenu">
+		                <li id="myorder"><a href="show3ddata.html" target="_blank">地点3D展示</a></li>
+		            </ul>
+		        </li>
+		        
+		    </ul>	
+		</div>
+  </body>
+</html>
